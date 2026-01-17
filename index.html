@@ -28,6 +28,57 @@
         * { -webkit-tap-highlight-color: transparent; }
         /* Disables pull-to-refresh and other default touch actions on the card */
         .touch-action-none { touch-action: none; }
+
+        /* Dark mode transitions */
+        .dark-transition { transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
+
+        /* Button hover animations */
+        .btn-bounce:hover { transform: scale(1.05); }
+        .btn-bounce:active { transform: scale(0.95); }
+        .btn-bounce { transition: transform 0.15s ease; }
+
+        /* Card shadow animations */
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+        }
+        .card-shadow:hover {
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15), 0 12px 20px -8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Circular progress */
+        .circular-progress {
+            transform: rotate(-90deg);
+        }
+        .circular-progress circle {
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        /* Undo toast animation */
+        @keyframes slideIn {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(100%); opacity: 0; }
+        }
+        .toast-enter { animation: slideIn 0.3s ease forwards; }
+        .toast-exit { animation: slideOut 0.3s ease forwards; }
+
+        /* Streak fire animation */
+        @keyframes flicker {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .streak-fire { animation: flicker 1s ease-in-out infinite; }
+
+        /* Badge pulse */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .badge-pulse { animation: pulse 2s ease-in-out infinite; }
     </style>
 </head>
 <body class="overscroll-none">
@@ -37,13 +88,19 @@
         const { useState, useEffect, useMemo, useCallback, useRef } = React;
 
         // --- Icon Components ---
-        const BookIcon = () => <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>;
+        const BookIcon = ({ darkMode }) => <svg className={`w-6 h-6 ${darkMode ? 'text-indigo-400' : 'text-indigo-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>;
         const ChevronLeftIcon = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>;
         const ChevronRightIcon = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>;
-        const RefreshIcon = () => <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>;
-        const ShuffleIcon = () => <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>;
-        const SpeakerIcon = () => <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>;
+        const RefreshIcon = ({ darkMode }) => <svg className={`w-4 h-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>;
+        const ShuffleIcon = ({ darkMode }) => <svg className={`w-4 h-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>;
+        const SpeakerIcon = ({ darkMode }) => <svg className={`w-4 h-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>;
         const CheckIcon = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>;
+        const SunIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>;
+        const MoonIcon = () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>;
+        const UndoIcon = () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>;
+        const FireIcon = () => <svg className="w-5 h-5 text-orange-500 streak-fire" fill="currentColor" viewBox="0 0 24 24"><path d="M12 23c-3.866 0-7-3.134-7-7 0-2.529 1.403-4.921 3.5-6.206V8c0-2.206 1.794-4 4-4s4 1.794 4 4v1.794C18.597 11.079 20 13.471 20 16c0 3.866-3.134 7-7 7zm0-14c-1.103 0-2 .897-2 2v2.535l-.629.375C7.868 14.854 7 15.871 7 17c0 2.757 2.243 5 5 5s5-2.243 5-5c0-1.129-.868-2.146-2.371-3.09L14 13.535V11c0-1.103-.897-2-2-2z"/></svg>;
+        const ChartIcon = ({ darkMode }) => <svg className={`w-4 h-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>;
+        const KeyboardIcon = ({ darkMode }) => <svg className={`w-3 h-3 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>;
 
         // --- DATA SETS (WITH FINAL REFINEMENTS) ---
         const baseVerbSets = {
@@ -89,20 +146,135 @@
         };
         const allDataSets = { ...baseVerbSets, ...baseNounSets, ...basePhraseSets };
 
+        // --- Card Type Badge Component ---
+        const CardTypeBadge = ({ type, darkMode }) => {
+            const badgeConfig = {
+                verb: { bg: darkMode ? 'bg-blue-900/50' : 'bg-blue-100', text: darkMode ? 'text-blue-300' : 'text-blue-700', label: 'Verb' },
+                noun: { bg: darkMode ? 'bg-green-900/50' : 'bg-green-100', text: darkMode ? 'text-green-300' : 'text-green-700', label: 'Noun' },
+                phrase: { bg: darkMode ? 'bg-purple-900/50' : 'bg-purple-100', text: darkMode ? 'text-purple-300' : 'text-purple-700', label: 'Phrase' }
+            };
+            const config = badgeConfig[type] || badgeConfig.phrase;
+            return (
+                <span className={`absolute top-3 right-3 px-2 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
+                    {config.label}
+                </span>
+            );
+        };
+
+        // --- Circular Progress Component ---
+        const CircularProgress = ({ progress, size = 48, strokeWidth = 4, darkMode }) => {
+            const radius = (size - strokeWidth) / 2;
+            const circumference = radius * 2 * Math.PI;
+            const offset = circumference - (progress / 100) * circumference;
+
+            return (
+                <svg width={size} height={size} className="circular-progress">
+                    <circle
+                        cx={size / 2}
+                        cy={size / 2}
+                        r={radius}
+                        fill="none"
+                        stroke={darkMode ? '#374151' : '#E5E7EB'}
+                        strokeWidth={strokeWidth}
+                    />
+                    <circle
+                        cx={size / 2}
+                        cy={size / 2}
+                        r={radius}
+                        fill="none"
+                        stroke={progress >= 100 ? '#10B981' : '#6366F1'}
+                        strokeWidth={strokeWidth}
+                        strokeDasharray={circumference}
+                        strokeDashoffset={offset}
+                        strokeLinecap="round"
+                    />
+                    <text
+                        x="50%"
+                        y="50%"
+                        textAnchor="middle"
+                        dy=".3em"
+                        className={`text-xs font-bold ${darkMode ? 'fill-gray-200' : 'fill-gray-700'}`}
+                        style={{ transform: 'rotate(90deg)', transformOrigin: 'center' }}
+                    >
+                        {Math.round(progress)}%
+                    </text>
+                </svg>
+            );
+        };
+
+        // --- Undo Toast Component ---
+        const UndoToast = ({ show, onUndo, onDismiss, darkMode, cardName }) => {
+            if (!show) return null;
+            return (
+                <div className={`fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 toast-enter`}>
+                    <div className={`flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${darkMode ? 'bg-gray-800 text-white' : 'bg-gray-900 text-white'}`}>
+                        <span className="text-sm">Marked "{cardName}" as known</span>
+                        <button
+                            onClick={onUndo}
+                            className="flex items-center gap-1 px-2 py-1 bg-indigo-600 hover:bg-indigo-700 rounded text-sm font-medium btn-bounce"
+                        >
+                            <UndoIcon /> Undo
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- Stats Modal Component ---
+        const StatsModal = ({ show, onClose, stats, darkMode }) => {
+            if (!show) return null;
+            return (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
+                    <div
+                        className={`w-full max-w-sm rounded-xl p-6 ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-2xl`}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <h3 className={`text-lg font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Your Statistics</h3>
+                        <div className="space-y-4">
+                            <div className={`flex justify-between items-center p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                                <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>Today's cards</span>
+                                <span className={`font-bold text-lg ${darkMode ? 'text-white' : 'text-gray-800'}`}>{stats.todayCards}</span>
+                            </div>
+                            <div className={`flex justify-between items-center p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                                <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>Total mastered</span>
+                                <span className={`font-bold text-lg ${darkMode ? 'text-white' : 'text-gray-800'}`}>{stats.totalMastered}</span>
+                            </div>
+                            <div className={`flex justify-between items-center p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                                <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>Current streak</span>
+                                <span className="font-bold text-lg text-orange-500 flex items-center gap-1">
+                                    <FireIcon /> {stats.streak} days
+                                </span>
+                            </div>
+                            <div className={`flex justify-between items-center p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                                <span className={darkMode ? 'text-gray-300' : 'text-gray-600'}>Best streak</span>
+                                <span className={`font-bold text-lg ${darkMode ? 'text-white' : 'text-gray-800'}`}>{stats.bestStreak} days</span>
+                            </div>
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className={`mt-6 w-full py-2 rounded-lg font-medium btn-bounce ${darkMode ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
         // --- Refactored Component: Flashcard ---
-        const Flashcard = ({ card, isFlipped, mode }) => {
+        const Flashcard = ({ card, isFlipped, mode, darkMode }) => {
             const getDynamicFontSize = (text) => {
                 if (!text) return 'sm:text-5xl text-4xl';
                 if (text.length > 30) return 'sm:text-3xl text-2xl';
                 if (text.length > 20) return 'sm:text-4xl text-3xl';
                 return 'sm:text-5xl text-4xl';
             };
-            
+
             if (!card) {
                 return (
-                    <div className="absolute inset-0 w-full h-full bg-white rounded-xl shadow-lg border-2 border-gray-200 flex flex-col items-center justify-center p-4 text-center">
-                        <div className="text-lg text-gray-600 font-medium">You've mastered all cards in this set!</div>
-                        <div className="text-sm text-gray-500 mt-2">Deselect a category or press Reset to study again.</div>
+                    <div className={`absolute inset-0 w-full h-full rounded-xl card-shadow border-2 flex flex-col items-center justify-center p-4 text-center ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                        <div className={`text-lg font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>You've mastered all cards in this set!</div>
+                        <div className={`text-sm mt-2 ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>Deselect a category or press Reset to study again.</div>
                     </div>
                 );
             }
@@ -112,57 +284,59 @@
 
             return (
                 <div className={`absolute inset-0 w-full h-full transition-transform duration-500 transform-style-preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
-                    <div className="absolute inset-0 w-full h-full bg-white rounded-xl shadow-lg border-2 border-indigo-100 backface-hidden flex flex-col items-center justify-center p-6">
-                        <div className="text-xs uppercase tracking-wide text-gray-500 mb-2">{mode === 'spanish-to-english' ? 'Español' : 'English'}</div>
-                        <div className={`font-bold text-gray-800 text-center ${getDynamicFontSize(frontText)}`}>{frontText}</div>
-                        <div className="absolute bottom-4 text-xs text-gray-400 mt-4">Tap or swipe</div>
+                    <div className={`absolute inset-0 w-full h-full rounded-xl card-shadow border-2 backface-hidden flex flex-col items-center justify-center p-6 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-indigo-100'}`}>
+                        <CardTypeBadge type={card.type} darkMode={darkMode} />
+                        <div className={`text-xs uppercase tracking-wide mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{mode === 'spanish-to-english' ? 'Español' : 'English'}</div>
+                        <div className={`font-bold text-center ${getDynamicFontSize(frontText)} ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>{frontText}</div>
+                        <div className={`absolute bottom-4 text-xs mt-4 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Tap or swipe · Space to flip</div>
                     </div>
-                    <div className="absolute inset-0 w-full h-full bg-indigo-50 rounded-xl shadow-lg border-2 border-indigo-200 backface-hidden rotate-y-180 flex flex-col items-center justify-center p-6">
-                        <div className="text-xs uppercase tracking-wide text-indigo-600 mb-2">{mode === 'spanish-to-english' ? 'English' : 'Español'}</div>
-                        <div className={`font-bold text-indigo-800 text-center mb-4 ${getDynamicFontSize(backText)}`}>{backText}</div>
+                    <div className={`absolute inset-0 w-full h-full rounded-xl card-shadow border-2 backface-hidden rotate-y-180 flex flex-col items-center justify-center p-6 ${darkMode ? 'bg-indigo-900/30 border-indigo-800' : 'bg-indigo-50 border-indigo-200'}`}>
+                        <CardTypeBadge type={card.type} darkMode={darkMode} />
+                        <div className={`text-xs uppercase tracking-wide mb-2 ${darkMode ? 'text-indigo-300' : 'text-indigo-600'}`}>{mode === 'spanish-to-english' ? 'English' : 'Español'}</div>
+                        <div className={`font-bold text-center mb-4 ${getDynamicFontSize(backText)} ${darkMode ? 'text-indigo-200' : 'text-indigo-800'}`}>{backText}</div>
                         {card.type === 'verb' && (
                             <div className="w-full max-w-xs">
-                                <div className="text-xs text-indigo-600 text-center mb-2">Present Tense Conjugations</div>
+                                <div className={`text-xs text-center mb-2 ${darkMode ? 'text-indigo-300' : 'text-indigo-600'}`}>Present Tense Conjugations</div>
                                 <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                                    {["yo", "tú", "él/ella", "nosotros", "vosotros", "ellos/ellas"].map((p, i) => <React.Fragment key={p}><div className="text-right text-indigo-700">{p}</div><div className="font-medium text-indigo-900">{card.conjugations[i]}</div></React.Fragment>)}
+                                    {["yo", "tú", "él/ella", "nosotros", "vosotros", "ellos/ellas"].map((p, i) => <React.Fragment key={p}><div className={`text-right ${darkMode ? 'text-indigo-400' : 'text-indigo-700'}`}>{p}</div><div className={`font-medium ${darkMode ? 'text-indigo-200' : 'text-indigo-900'}`}>{card.conjugations[i]}</div></React.Fragment>)}
                                 </div>
                             </div>
                         )}
-                        <div className="absolute bottom-4 text-xs text-indigo-400">Tap or swipe</div>
+                        <div className={`absolute bottom-4 text-xs ${darkMode ? 'text-indigo-400' : 'text-indigo-400'}`}>Tap or swipe · Enter to mark known</div>
                     </div>
                 </div>
             );
         };
 
         // --- Refactored Component: DeckControls ---
-        const DeckControls = ({ handlers, state }) => (
+        const DeckControls = ({ handlers, state, darkMode }) => (
             <div className="flex justify-between items-center mb-6 mt-4">
-                <button onClick={handlers.handlePrevious} disabled={state.deckSize < 2 || state.isAnimating} className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm border disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors text-sm"><ChevronLeftIcon />Previous</button>
+                <button onClick={handlers.handlePrevious} disabled={state.deckSize < 2 || state.isAnimating} className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow-sm border disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm btn-bounce ${darkMode ? 'bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-700' : 'bg-white hover:bg-gray-50'}`}><ChevronLeftIcon />Previous</button>
                 <div className="flex items-center gap-2">
-                    <button onClick={handlers.resetDeckProgress} disabled={state.totalPotentialCards === 0} className="p-2 bg-white rounded-lg shadow-sm border hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="Reset Progress for Selected Sets" aria-label="Reset deck progress"><RefreshIcon /></button>
-                    <button onClick={handlers.handleSpeakerClick} disabled={!state.isCardPresent} className="p-2 bg-white rounded-lg shadow-sm border hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="Play audio" aria-label="Play audio"><SpeakerIcon /></button>
-                    <button onClick={handlers.handleToggleRemembered} disabled={!state.isCardPresent || state.isAnimating} className={`p-2 rounded-lg shadow-sm border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${state.isRemembered ? 'bg-green-500 text-white border-green-600 hover:bg-green-600' : 'bg-white text-gray-600 hover:bg-gray-50'}`} title={state.isRemembered ? "Mark as not known" : "Mark as known"}><CheckIcon /></button>
+                    <button onClick={handlers.resetDeckProgress} disabled={state.totalPotentialCards === 0} className={`p-2 rounded-lg shadow-sm border transition-colors disabled:opacity-50 disabled:cursor-not-allowed btn-bounce ${darkMode ? 'bg-gray-800 border-gray-700 hover:bg-gray-700' : 'bg-white hover:bg-gray-50'}`} title="Reset Progress for Selected Sets" aria-label="Reset deck progress"><RefreshIcon darkMode={darkMode} /></button>
+                    <button onClick={handlers.handleSpeakerClick} disabled={!state.isCardPresent} className={`p-2 rounded-lg shadow-sm border transition-colors disabled:opacity-50 disabled:cursor-not-allowed btn-bounce ${darkMode ? 'bg-gray-800 border-gray-700 hover:bg-gray-700' : 'bg-white hover:bg-gray-50'}`} title="Play audio" aria-label="Play audio"><SpeakerIcon darkMode={darkMode} /></button>
+                    <button onClick={handlers.handleToggleRemembered} disabled={!state.isCardPresent || state.isAnimating} className={`p-2 rounded-lg shadow-sm border transition-colors disabled:opacity-50 disabled:cursor-not-allowed btn-bounce ${state.isRemembered ? 'bg-green-500 text-white border-green-600 hover:bg-green-600' : darkMode ? 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700' : 'bg-white text-gray-600 hover:bg-gray-50'}`} title={state.isRemembered ? "Mark as not known" : "Mark as known (Enter)"}><CheckIcon /></button>
                 </div>
-                <button onClick={handlers.handleNext} disabled={state.deckSize < 2 || state.isAnimating} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-700 transition-colors text-sm">Next<ChevronRightIcon /></button>
+                <button onClick={handlers.handleNext} disabled={state.deckSize < 2 || state.isAnimating} className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-700 transition-colors text-sm btn-bounce">Next<ChevronRightIcon /></button>
             </div>
         );
 
         // --- Refactored Component: CategoryTabs ---
-        const CategoryTabs = ({ activeTab, setActiveTab, activeSets, handleSetToggle }) => {
+        const CategoryTabs = ({ activeTab, setActiveTab, activeSets, handleSetToggle, darkMode }) => {
              const CheckboxGrid = ({ sets, type, onToggleAll }) => (
-                <div className="mb-6 bg-white/50 p-4 rounded-lg border border-gray-200 shadow-sm">
+                <div className={`mb-6 p-4 rounded-lg border shadow-sm ${darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white/50 border-gray-200'}`}>
                     <div className="flex justify-between items-center mb-3">
-                        <label className="text-sm font-medium text-gray-800">Choose {type} Sets:</label>
+                        <label className={`text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Choose {type} Sets:</label>
                         <div className="flex gap-2">
-                            <button onClick={() => onToggleAll(sets, true)} className="text-xs font-medium text-indigo-600 hover:text-indigo-800">Select All</button>
-                            <button onClick={() => onToggleAll(sets, false)} className="text-xs font-medium text-indigo-600 hover:text-indigo-800">Deselect All</button>
+                            <button onClick={() => onToggleAll(sets, true)} className={`text-xs font-medium ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'}`}>Select All</button>
+                            <button onClick={() => onToggleAll(sets, false)} className={`text-xs font-medium ${darkMode ? 'text-indigo-400 hover:text-indigo-300' : 'text-indigo-600 hover:text-indigo-800'}`}>Deselect All</button>
                         </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
                         {Object.keys(sets).map((setName) => (
-                            <label key={setName} className="flex items-center space-x-2 cursor-pointer p-2 rounded-md hover:bg-indigo-100/50">
+                            <label key={setName} className={`flex items-center space-x-2 cursor-pointer p-2 rounded-md ${darkMode ? 'hover:bg-indigo-900/30' : 'hover:bg-indigo-100/50'}`}>
                                 <input type="checkbox" checked={!!activeSets[setName]} onChange={() => handleSetToggle(setName)} className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"/>
-                                <span className="text-sm text-gray-700 select-none">{setName}</span>
+                                <span className={`text-sm select-none ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{setName}</span>
                             </label>
                         ))}
                     </div>
@@ -170,10 +344,10 @@
             );
             return (
                 <div>
-                    <div className="border-b border-gray-200"><nav className="-mb-px flex justify-center gap-6" aria-label="Tabs">
-                        <button onClick={() => setActiveTab('verbs')} className={`${activeTab === 'verbs' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'} py-4 px-1 border-b-2 font-medium text-sm`}>Verbs</button>
-                        <button onClick={() => setActiveTab('nouns')} className={`${activeTab === 'nouns' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'} py-4 px-1 border-b-2 font-medium text-sm`}>Nouns</button>
-                        <button onClick={() => setActiveTab('phrases')} className={`${activeTab === 'phrases' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700'} py-4 px-1 border-b-2 font-medium text-sm`}>Phrases</button>
+                    <div className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}><nav className="-mb-px flex justify-center gap-6" aria-label="Tabs">
+                        <button onClick={() => setActiveTab('verbs')} className={`${activeTab === 'verbs' ? (darkMode ? 'border-indigo-400 text-indigo-400' : 'border-indigo-500 text-indigo-600') : (darkMode ? 'border-transparent text-gray-400 hover:text-gray-300' : 'border-transparent text-gray-500 hover:text-gray-700')} py-4 px-1 border-b-2 font-medium text-sm`}>Verbs</button>
+                        <button onClick={() => setActiveTab('nouns')} className={`${activeTab === 'nouns' ? (darkMode ? 'border-indigo-400 text-indigo-400' : 'border-indigo-500 text-indigo-600') : (darkMode ? 'border-transparent text-gray-400 hover:text-gray-300' : 'border-transparent text-gray-500 hover:text-gray-700')} py-4 px-1 border-b-2 font-medium text-sm`}>Nouns</button>
+                        <button onClick={() => setActiveTab('phrases')} className={`${activeTab === 'phrases' ? (darkMode ? 'border-indigo-400 text-indigo-400' : 'border-indigo-500 text-indigo-600') : (darkMode ? 'border-transparent text-gray-400 hover:text-gray-300' : 'border-transparent text-gray-500 hover:text-gray-700')} py-4 px-1 border-b-2 font-medium text-sm`}>Phrases</button>
                     </nav></div>
                     <div className="pt-5">
                         {activeTab === 'verbs' && <CheckboxGrid sets={baseVerbSets} type="Verb" onToggleAll={(sets, shouldSelect) => Object.keys(sets).forEach(name => handleSetToggle(name, shouldSelect))} />}
@@ -183,6 +357,9 @@
                 </div>
             );
         };
+
+        // --- Helper: Get today's date string ---
+        const getTodayStr = () => new Date().toISOString().split('T')[0];
 
         // --- Main App Component ---
         const SpanishFlashcards = () => {
@@ -195,7 +372,39 @@
             const [voices, setVoices] = useState([]);
             const interactionRef = useRef({});
             const [isAnimating, setIsAnimating] = useState(false);
-            const FLIP_ANIMATION_DURATION = 500; 
+            const FLIP_ANIMATION_DURATION = 500;
+
+            // --- New UI State ---
+            const [darkMode, setDarkMode] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('spanishFlashcardsDarkMode');
+                    return saved ? JSON.parse(saved) : window.matchMedia('(prefers-color-scheme: dark)').matches;
+                } catch { return false; }
+            });
+            const [showStats, setShowStats] = useState(false);
+            const [undoState, setUndoState] = useState({ show: false, card: null, timeout: null });
+
+            // --- Streak and Stats State ---
+            const [streakData, setStreakData] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('spanishFlashcardsStreak');
+                    if (saved) {
+                        const data = JSON.parse(saved);
+                        const today = getTodayStr();
+                        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+                        // Check if streak should continue or reset
+                        if (data.lastDate === today) {
+                            return data;
+                        } else if (data.lastDate === yesterday) {
+                            return { ...data, todayCards: 0 };
+                        } else {
+                            // Streak broken - reset but keep bestStreak
+                            return { streak: 0, bestStreak: data.bestStreak || 0, lastDate: null, todayCards: 0 };
+                        }
+                    }
+                    return { streak: 0, bestStreak: 0, lastDate: null, todayCards: 0 };
+                } catch { return { streak: 0, bestStreak: 0, lastDate: null, todayCards: 0 }; }
+            });
 
             const [rememberedCards, setRememberedCards] = useState(() => {
                 try {
@@ -203,6 +412,24 @@
                     return saved ? new Set(JSON.parse(saved)) : new Set();
                 } catch { return new Set(); }
             });
+
+            // --- Save dark mode preference ---
+            useEffect(() => {
+                try {
+                    localStorage.setItem('spanishFlashcardsDarkMode', JSON.stringify(darkMode));
+                } catch (error) {
+                    console.error("Failed to save dark mode preference:", error);
+                }
+            }, [darkMode]);
+
+            // --- Save streak data ---
+            useEffect(() => {
+                try {
+                    localStorage.setItem('spanishFlashcardsStreak', JSON.stringify(streakData));
+                } catch (error) {
+                    console.error("Failed to save streak data:", error);
+                }
+            }, [streakData]);
 
             useEffect(() => {
                 const handler = setTimeout(() => {
@@ -214,7 +441,7 @@
                 }, 500);
                 return () => clearTimeout(handler);
             }, [rememberedCards]);
-            
+
             useEffect(() => {
                 const loadVoices = () => setVoices(window.speechSynthesis.getVoices());
                 window.speechSynthesis.onvoiceschanged = loadVoices;
@@ -308,6 +535,33 @@
             const handleFlip = () => { if (shuffledCards.length > 0) setIsFlipped(f => !f); };
             const handleSpeakerClick = () => { if (shuffledCards[currentIndex]) speakText(shuffledCards[currentIndex].spanish); };
             
+            // --- Undo handler ---
+            const handleUndo = useCallback(() => {
+                if (!undoState.card) return;
+
+                const cardToRestore = undoState.card;
+
+                // Clear timeout and hide toast
+                if (undoState.timeout) clearTimeout(undoState.timeout);
+                setUndoState({ show: false, card: null, timeout: null });
+
+                // Remove from remembered cards
+                setRememberedCards(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(cardToRestore.spanish);
+                    return newSet;
+                });
+
+                // Add back to shuffled cards
+                setShuffledCards(prevCards => [...prevCards, cardToRestore]);
+
+                // Decrement today's cards
+                setStreakData(prev => ({
+                    ...prev,
+                    todayCards: Math.max(0, prev.todayCards - 1)
+                }));
+            }, [undoState]);
+
             const handleToggleRemembered = () => {
                 const currentCard = shuffledCards[currentIndex];
                 // Guard against clicks when there's no card or an animation is in progress
@@ -326,23 +580,49 @@
                         }
                         return newSet;
                     });
-            
+
                     // Only remove the card from the visible deck if it's being newly remembered
                     if (!isAlreadyRemembered) {
+                        // Update streak data
+                        setStreakData(prev => {
+                            const today = getTodayStr();
+                            const newTodayCards = prev.todayCards + 1;
+                            let newStreak = prev.streak;
+
+                            // If this is the first card today, increment streak
+                            if (prev.lastDate !== today) {
+                                newStreak = prev.streak + 1;
+                            }
+
+                            return {
+                                streak: newStreak,
+                                bestStreak: Math.max(prev.bestStreak, newStreak),
+                                lastDate: today,
+                                todayCards: newTodayCards
+                            };
+                        });
+
                         setShuffledCards(prevCards => {
                             const newCards = prevCards.filter(card => card.spanish !== currentCard.spanish);
                             setCurrentIndex(prevIndex => Math.min(prevIndex, newCards.length > 0 ? newCards.length - 1 : 0));
                             return newCards;
                         });
+
+                        // Show undo toast
+                        if (undoState.timeout) clearTimeout(undoState.timeout);
+                        const timeout = setTimeout(() => {
+                            setUndoState({ show: false, card: null, timeout: null });
+                        }, 5000);
+                        setUndoState({ show: true, card: currentCard, timeout });
                     }
                 };
-                
+
                 // Check if we are remembering a card (not un-remembering) and if it's currently flipped
                 if (isFlipped && !isAlreadyRemembered) {
                     // If so, start the flip-back animation first
                     setIsAnimating(true);
                     setIsFlipped(false);
-                    
+
                     // After the animation duration, perform the deck update
                     setTimeout(() => {
                         performUpdate();
@@ -420,6 +700,48 @@
                 e.target.releasePointerCapture(e.pointerId);
             };
 
+            // --- Keyboard shortcuts ---
+            useEffect(() => {
+                const handleKeyDown = (e) => {
+                    // Don't trigger if user is typing in an input
+                    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+                    switch (e.key) {
+                        case 'ArrowLeft':
+                            e.preventDefault();
+                            handlePrevious();
+                            break;
+                        case 'ArrowRight':
+                            e.preventDefault();
+                            handleNext();
+                            break;
+                        case ' ': // Space bar
+                            e.preventDefault();
+                            handleFlip();
+                            break;
+                        case 'Enter':
+                            e.preventDefault();
+                            handleToggleRemembered();
+                            break;
+                        case 'z':
+                            if ((e.ctrlKey || e.metaKey) && undoState.show) {
+                                e.preventDefault();
+                                handleUndo();
+                            }
+                            break;
+                        case 'd':
+                            if (e.ctrlKey || e.metaKey) {
+                                e.preventDefault();
+                                setDarkMode(d => !d);
+                            }
+                            break;
+                    }
+                };
+
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, [handleNext, handlePrevious, handleFlip, handleToggleRemembered, handleUndo, undoState.show]);
+
             const currentCard = shuffledCards[currentIndex];
             const rememberedCountInSet = useMemo(() => {
                 const potentialIds = new Set(totalPotentialCards.map(c => c.spanish));
@@ -435,41 +757,132 @@
             const progress = totalPotentialCards.length > 0 ? (rememberedCountInSet / totalPotentialCards.length) * 100 : 0;
             const isRemembered = currentCard && rememberedCards.has(currentCard.spanish);
 
+            // Stats for modal
+            const stats = {
+                todayCards: streakData.todayCards,
+                totalMastered: rememberedCards.size,
+                streak: streakData.streak,
+                bestStreak: streakData.bestStreak
+            };
+
             return (
-                <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 flex flex-col">
+                <div className={`min-h-screen p-4 flex flex-col dark-transition ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-blue-50 to-indigo-100'}`}>
                     <div className="max-w-md mx-auto w-full flex flex-col flex-grow">
-                        <header className="text-center mb-6">
-                            <div className="flex items-center justify-center gap-2 mb-2"><BookIcon /><h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Spanish Flashcards</h1></div>
+                        {/* Header with dark mode toggle */}
+                        <header className="mb-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                    <BookIcon darkMode={darkMode} />
+                                    <h1 className={`text-2xl sm:text-3xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Spanish Flashcards</h1>
+                                </div>
+                                <button
+                                    onClick={() => setDarkMode(d => !d)}
+                                    className={`p-2 rounded-lg transition-colors btn-bounce ${darkMode ? 'bg-gray-800 text-yellow-400 hover:bg-gray-700' : 'bg-white text-gray-700 hover:bg-gray-100 shadow-sm border'}`}
+                                    title={darkMode ? 'Switch to light mode (Ctrl+D)' : 'Switch to dark mode (Ctrl+D)'}
+                                >
+                                    {darkMode ? <SunIcon /> : <MoonIcon />}
+                                </button>
+                            </div>
                         </header>
 
-                        <div className="mb-4">
-                            <div className="flex justify-between text-sm text-gray-600 mb-1"><span>Mastery Progress</span><span>{rememberedCountInSet}/{totalPotentialCards.length} ({progress.toFixed(0)}%)</span></div>
-                            <div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-green-500 h-2 rounded-full" style={{ width: `${progress}%` }}></div></div>
-                        </div>
-                        <div className="flex justify-between items-center mb-6">
-                            <button onClick={() => setMode(m => m === 'spanish-to-english' ? 'english-to-spanish' : 'english-to-english')} className="px-3 py-2 bg-white rounded-lg shadow-sm border text-sm font-medium text-gray-700 hover:bg-gray-50">{mode === 'spanish-to-english' ? 'ES → EN' : 'EN → ES'}</button>
-                            <div className="text-sm font-medium text-gray-600">{shuffledCards.length > 0 ? `Card ${currentIndex + 1} / ${shuffledCards.length}` : 'Deck Empty'}</div>
-                            <button onClick={handleShuffle} disabled={shuffledCards.length < 2} className="p-2 bg-white rounded-lg shadow-sm border hover:bg-gray-50 disabled:opacity-50"><ShuffleIcon /></button>
+                        {/* Progress and Stats Row */}
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <CircularProgress progress={progress} darkMode={darkMode} />
+                                <div>
+                                    <div className={`text-sm font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                                        {rememberedCountInSet}/{totalPotentialCards.length} mastered
+                                    </div>
+                                    <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                                        {streakData.todayCards} cards today
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                {/* Streak display */}
+                                {streakData.streak > 0 && (
+                                    <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${darkMode ? 'bg-orange-900/30' : 'bg-orange-100'}`}>
+                                        <FireIcon />
+                                        <span className={`text-sm font-medium ${darkMode ? 'text-orange-300' : 'text-orange-700'}`}>{streakData.streak}</span>
+                                    </div>
+                                )}
+                                {/* Stats button */}
+                                <button
+                                    onClick={() => setShowStats(true)}
+                                    className={`p-2 rounded-lg transition-colors btn-bounce ${darkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-white hover:bg-gray-50 shadow-sm border'}`}
+                                    title="View statistics"
+                                >
+                                    <ChartIcon darkMode={darkMode} />
+                                </button>
+                            </div>
                         </div>
 
-                        <div 
+                        {/* Mode and Card Counter Row */}
+                        <div className="flex justify-between items-center mb-6">
+                            <button
+                                onClick={() => setMode(m => m === 'spanish-to-english' ? 'english-to-spanish' : 'spanish-to-english')}
+                                className={`px-3 py-2 rounded-lg shadow-sm border text-sm font-medium transition-colors btn-bounce ${darkMode ? 'bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-700' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                            >
+                                {mode === 'spanish-to-english' ? 'ES → EN' : 'EN → ES'}
+                            </button>
+                            <div className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                                {shuffledCards.length > 0 ? `Card ${currentIndex + 1} / ${shuffledCards.length}` : 'Deck Empty'}
+                            </div>
+                            <button
+                                onClick={handleShuffle}
+                                disabled={shuffledCards.length < 2}
+                                className={`p-2 rounded-lg shadow-sm border transition-colors disabled:opacity-50 btn-bounce ${darkMode ? 'bg-gray-800 border-gray-700 hover:bg-gray-700' : 'bg-white hover:bg-gray-50'}`}
+                            >
+                                <ShuffleIcon darkMode={darkMode} />
+                            </button>
+                        </div>
+
+                        {/* Flashcard */}
+                        <div
                             className="relative w-full h-80 cursor-pointer perspective-1000 touch-action-none"
                             onPointerDown={handlePointerDown}
                             onPointerMove={handlePointerMove}
                             onPointerUp={handlePointerUp}
                         >
-                            <Flashcard card={currentCard} isFlipped={isFlipped} mode={mode} />
+                            <Flashcard card={currentCard} isFlipped={isFlipped} mode={mode} darkMode={darkMode} />
                         </div>
-                        
-                        <DeckControls 
+
+                        {/* Deck Controls */}
+                        <DeckControls
                             handlers={{ handlePrevious, resetDeckProgress, handleSpeakerClick, handleToggleRemembered, handleNext }}
                             state={{ deckSize: shuffledCards.length, totalPotentialCards: totalPotentialCards.length, isCardPresent: !!currentCard, isRemembered, isAnimating }}
+                            darkMode={darkMode}
                         />
+
+                        {/* Keyboard hints */}
+                        <div className={`text-center text-xs mb-4 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded ${darkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                                ← → Navigate · Space Flip · Enter Mark Known
+                            </span>
+                        </div>
 
                         <div className="flex-grow"></div>
 
-                        <CategoryTabs activeTab={activeTab} setActiveTab={setActiveTab} activeSets={activeSets} handleSetToggle={handleSetToggle} />
+                        {/* Category Tabs */}
+                        <CategoryTabs activeTab={activeTab} setActiveTab={setActiveTab} activeSets={activeSets} handleSetToggle={handleSetToggle} darkMode={darkMode} />
                     </div>
+
+                    {/* Undo Toast */}
+                    <UndoToast
+                        show={undoState.show}
+                        onUndo={handleUndo}
+                        onDismiss={() => setUndoState({ show: false, card: null, timeout: null })}
+                        darkMode={darkMode}
+                        cardName={undoState.card?.spanish || ''}
+                    />
+
+                    {/* Stats Modal */}
+                    <StatsModal
+                        show={showStats}
+                        onClose={() => setShowStats(false)}
+                        stats={stats}
+                        darkMode={darkMode}
+                    />
                 </div>
             );
         };
