@@ -721,25 +721,33 @@
             
             const handlePointerDown = (e) => {
                 if (shuffledCards.length === 0 || isAnimating) return;
-                e.preventDefault(); 
                 interactionRef.current = {
                     startX: e.clientX,
+                    startY: e.clientY,
+                    startTime: Date.now(),
                     isSwiping: false,
+                    handled: false,
                 };
-                e.target.setPointerCapture(e.pointerId);
+                try {
+                    e.target.setPointerCapture(e.pointerId);
+                } catch (err) {
+                    // Pointer capture not supported, continue anyway
+                }
             };
 
             const handlePointerMove = (e) => {
-                if (interactionRef.current.startX === undefined) return;
-                const distance = Math.abs(e.clientX - interactionRef.current.startX);
-                if (distance > 10) {
+                if (!interactionRef.current.startX) return;
+                const distanceX = Math.abs(e.clientX - interactionRef.current.startX);
+                const distanceY = Math.abs(e.clientY - interactionRef.current.startY);
+                if (distanceX > 10 || distanceY > 10) {
                     interactionRef.current.isSwiping = true;
                 }
             };
 
             const handlePointerUp = (e) => {
-                if (interactionRef.current.startX === undefined) return;
-                
+                if (!interactionRef.current.startX || interactionRef.current.handled) return;
+                interactionRef.current.handled = true;
+
                 const { startX, isSwiping } = interactionRef.current;
                 const endX = e.clientX;
                 const distance = endX - startX;
@@ -752,8 +760,20 @@
                     handleFlip();
                 }
 
+                try {
+                    e.target.releasePointerCapture(e.pointerId);
+                } catch (err) {
+                    // Pointer capture release failed, ignore
+                }
                 interactionRef.current = {};
-                e.target.releasePointerCapture(e.pointerId);
+            };
+
+            // Fallback click handler for simple taps (especially on mobile)
+            const handleCardClick = (e) => {
+                // Only handle if pointer events didn't already handle it
+                if (interactionRef.current.handled) return;
+                if (shuffledCards.length === 0 || isAnimating) return;
+                handleFlip();
             };
 
             // --- Keyboard shortcuts ---
@@ -895,10 +915,11 @@
 
                         {/* Flashcard */}
                         <div
-                            className="relative w-full min-h-[380px] cursor-pointer perspective-1000 touch-action-none"
+                            className="relative w-full min-h-[380px] cursor-pointer perspective-1000 touch-action-pan-y"
                             onPointerDown={handlePointerDown}
                             onPointerMove={handlePointerMove}
                             onPointerUp={handlePointerUp}
+                            onClick={handleCardClick}
                         >
                             <Flashcard card={currentCard} isFlipped={isFlipped} mode={mode} darkMode={darkMode} />
                         </div>
