@@ -20,10 +20,28 @@
     
     <!-- Styles -->
     <style>
-        .perspective-1000 { perspective: 1000px; }
-        .transform-style-preserve-3d { transform-style: preserve-3d; }
-        .backface-hidden { backface-visibility: hidden; }
-        .rotate-y-180 { transform: rotateY(180deg); }
+        .perspective-1000 {
+            perspective: 1000px;
+            -webkit-perspective: 1000px;
+        }
+        .transform-style-preserve-3d {
+            transform-style: preserve-3d;
+            -webkit-transform-style: preserve-3d;
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+            -webkit-transform: rotateY(180deg);
+        }
+        /* GPU acceleration for smooth flips */
+        .card-flip-container {
+            will-change: transform;
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+        }
         /* Prevents flashing highlight on tap in mobile browsers */
         * { -webkit-tap-highlight-color: transparent; }
         /* Disables pull-to-refresh and other default touch actions on the card */
@@ -37,13 +55,9 @@
         .btn-bounce:active { transform: scale(0.95); }
         .btn-bounce { transition: transform 0.15s ease; }
 
-        /* Card shadow animations */
+        /* Card shadow - static shadow, no animation during flip for performance */
         .card-shadow {
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-            transition: box-shadow 0.3s ease, transform 0.3s ease;
-        }
-        .card-shadow:hover {
-            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15), 0 12px 20px -8px rgba(0, 0, 0, 0.1);
         }
 
         /* Circular progress */
@@ -283,7 +297,7 @@
             const backText = mode === 'spanish-to-english' ? card.english : card.spanish;
 
             return (
-                <div className={`absolute inset-0 w-full h-full transition-transform duration-500 transform-style-preserve-3d ${isFlipped ? 'rotate-y-180' : ''}`}>
+                <div className={`absolute inset-0 w-full h-full transition-transform duration-500 transform-style-preserve-3d card-flip-container ${isFlipped ? 'rotate-y-180' : ''}`}>
                     <div className={`absolute inset-0 w-full h-full rounded-xl card-shadow border-2 backface-hidden flex flex-col items-center justify-center p-6 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-indigo-100'}`}>
                         <CardTypeBadge type={card.type} darkMode={darkMode} />
                         <div className={`text-xs uppercase tracking-wide mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{mode === 'spanish-to-english' ? 'Español' : 'English'}</div>
