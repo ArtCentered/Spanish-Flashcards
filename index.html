@@ -272,7 +272,7 @@
 
             if (!card) {
                 return (
-                    <div className={`absolute inset-0 w-full h-full rounded-xl card-shadow border-2 flex flex-col items-center justify-center p-4 text-center ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                    <div className={`absolute inset-0 w-full h-full min-h-[380px] rounded-xl card-shadow border-2 flex flex-col items-center justify-center p-4 text-center ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
                         <div className={`text-lg font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>You've mastered all cards in this set!</div>
                         <div className={`text-sm mt-2 ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>Deselect a category or press Reset to study again.</div>
                     </div>
@@ -365,9 +365,24 @@
         const SpanishFlashcards = () => {
             const [currentIndex, setCurrentIndex] = useState(0);
             const [isFlipped, setIsFlipped] = useState(false);
-            const [mode, setMode] = useState('spanish-to-english');
-            const [activeTab, setActiveTab] = useState('verbs');
-            const [activeSets, setActiveSets] = useState({ "Essential Being & Having": true });
+            const [mode, setMode] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('spanishFlashcardsMode');
+                    return saved ? JSON.parse(saved) : 'spanish-to-english';
+                } catch { return 'spanish-to-english'; }
+            });
+            const [activeTab, setActiveTab] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('spanishFlashcardsActiveTab');
+                    return saved ? JSON.parse(saved) : 'verbs';
+                } catch { return 'verbs'; }
+            });
+            const [activeSets, setActiveSets] = useState(() => {
+                try {
+                    const saved = localStorage.getItem('spanishFlashcardsActiveSets');
+                    return saved ? JSON.parse(saved) : { "Essential Being & Having": true };
+                } catch { return { "Essential Being & Having": true }; }
+            });
             const [shuffledCards, setShuffledCards] = useState([]);
             const [voices, setVoices] = useState([]);
             const interactionRef = useRef({});
@@ -421,6 +436,33 @@
                     console.error("Failed to save dark mode preference:", error);
                 }
             }, [darkMode]);
+
+            // --- Save mode preference ---
+            useEffect(() => {
+                try {
+                    localStorage.setItem('spanishFlashcardsMode', JSON.stringify(mode));
+                } catch (error) {
+                    console.error("Failed to save mode preference:", error);
+                }
+            }, [mode]);
+
+            // --- Save active tab ---
+            useEffect(() => {
+                try {
+                    localStorage.setItem('spanishFlashcardsActiveTab', JSON.stringify(activeTab));
+                } catch (error) {
+                    console.error("Failed to save active tab:", error);
+                }
+            }, [activeTab]);
+
+            // --- Save active sets ---
+            useEffect(() => {
+                try {
+                    localStorage.setItem('spanishFlashcardsActiveSets', JSON.stringify(activeSets));
+                } catch (error) {
+                    console.error("Failed to save active sets:", error);
+                }
+            }, [activeSets]);
 
             // --- Save streak data ---
             useEffect(() => {
@@ -839,7 +881,7 @@
 
                         {/* Flashcard */}
                         <div
-                            className="relative w-full h-80 cursor-pointer perspective-1000 touch-action-none"
+                            className="relative w-full min-h-[380px] cursor-pointer perspective-1000 touch-action-none"
                             onPointerDown={handlePointerDown}
                             onPointerMove={handlePointerMove}
                             onPointerUp={handlePointerUp}
